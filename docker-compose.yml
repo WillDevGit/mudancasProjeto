@@ -1,0 +1,74 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: mudafacil-db
+    environment:
+      POSTGRES_DB: mudafacil
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: senha
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mudafacil"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build: ./backend
+    container_name: mudafacil-api
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: mudafacil
+      DB_USER: postgres
+      DB_PASSWORD: senha
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: .
+    container_name: mudafacil-web
+    environment:
+      VITE_API_URL: http://localhost:3001
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: mudafacil-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mudafacil.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_REPLACE_SERVERS_ON_STARTUP: "True"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - ./docker/pgadmin/pgpass:/pgpass.ro:ro
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        tr -d '\r' < /pgpass.ro > /tmp/pgpass
+        chmod 600 /tmp/pgpass
+        exec /entrypoint.sh
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  pgadmin_data:

@@ -1,0 +1,11 @@
+node_modules
+backend/node_modules
+.git
+.tanstack
+.nitro
+.output
+.wrangler
+dist
+*.log
+.env
+backend/.env
