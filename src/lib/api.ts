@@ -120,7 +120,8 @@ export type Counts = {
 export const cidadesApi = {
   list: () => api.get<Cidade[]>("/cidades"),
   create: (body: { nome: string; estado: string }) => api.post<Cidade>("/cidades", body),
-  update: (id: number, body: { nome: string; estado: string }) => api.put<Cidade>(`/cidades/${id}`, body),
+  update: (id: number, body: { nome: string; estado: string }) =>
+    api.put<Cidade>(`/cidades/${id}`, body),
   remove: (id: number) => api.del(`/cidades/${id}`),
 };
 
@@ -163,7 +164,8 @@ export type FuncionarioPayload = {
 export const funcionariosApi = {
   list: () => api.get<Funcionario[]>("/funcionarios"),
   create: (body: FuncionarioPayload) => api.post<Funcionario>("/funcionarios", body),
-  update: (cpf: string, body: FuncionarioPayload) => api.put<Funcionario>(`/funcionarios/${cpf}`, body),
+  update: (cpf: string, body: FuncionarioPayload) =>
+    api.put<Funcionario>(`/funcionarios/${cpf}`, body),
   remove: (cpf: string) => api.del(`/funcionarios/${cpf}`),
 };
 
@@ -208,4 +210,9 @@ export const pedidosApi = {
 
 export const statsApi = {
   counts: () => api.get<Counts>("/stats/counts"),
+  porCidade: (): Promise<StatCidade[]> => request("/stats/por-cidade"),
+  porEmpresa: (): Promise<StatEmpresa[]> => request("/stats/por-empresa"),
 };
+
+export type StatCidade = { cidade: string; total_servicos: number; valor_total: number };
+export type StatEmpresa = { empresa: string; total_servicos: number; valor_ganho: number };
